@@ -32,6 +32,7 @@ dependencies {
   testImplementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.5'
   testRuntimeOnly group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.5'
   testRuntimeOnly group: 'log4j', name: 'log4j', version: '1.2.16'
+
 }
 
 jar.doFirst {

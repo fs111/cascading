@@ -31,6 +31,7 @@ import cascading.nested.core.NestedCoercibleType;
 import cascading.tuple.coerce.Coercions;
 import cascading.tuple.type.CoercibleType;
 import cascading.tuple.type.SerializableType;
+import cascading.tuple.type.ToCanonical;
 import cascading.util.Util;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -90,6 +91,39 @@ public class JSONCoercibleType implements NestedCoercibleType<JsonNode, ArrayNod
   public Class<JsonNode> getCanonicalType()
     {
     return JsonNode.class;
+    }
+
+  @Override
+  public <T> ToCanonical<T, JsonNode> from( Type from )
+    {
+    if( from.getClass() == JSONCoercibleType.class )
+      return ( v ) -> (JsonNode) v;
+
+    if( from instanceof Class && JsonNode.class.isAssignableFrom( (Class<?>) from ) )
+      return ( v ) -> (JsonNode) v;
+
+    if( from == String.class )
+      return ( v ) -> v == null ? null : nodeOrParse( (String) v );
+
+    if( from == Integer.class || from == Integer.TYPE )
+      return ( v ) -> v == null ? null : JsonNodeFactory.instance.numberNode( (Integer) v );
+
+    if( from == Long.class || from == Long.TYPE )
+      return ( v ) -> v == null ? null : JsonNodeFactory.instance.numberNode( (Long) v );
+
+    if( from == Float.class || from == Float.TYPE )
+      return ( v ) -> v == null ? null : JsonNodeFactory.instance.numberNode( (Float) v );
+
+    if( from == Double.class || from == Double.TYPE )
+      return ( v ) -> v == null ? null : JsonNodeFactory.instance.numberNode( (Double) v );
+
+    if( from == Boolean.class || from == Boolean.TYPE )
+      return ( v ) -> v == null ? null : JsonNodeFactory.instance.booleanNode( (Boolean) v );
+
+    if( from instanceof Class && ( Collection.class.isAssignableFrom( (Class<?>) from ) || Map.class.isAssignableFrom( (Class<?>) from ) ) )
+      return ( v ) -> v == null ? null : mapper.valueToTree( v );
+
+    return ( v ) -> v == null ? null : JsonNodeFactory.instance.pojoNode( v );
     }
 
   @Override

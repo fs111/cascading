@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2017 Xplenty, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2021 Chris K Wensel <chris@wensel.net>. All Rights Reserved.
  *
  * Project and contact information: http://www.cascading.org/
  *
@@ -28,39 +28,39 @@ import cascading.tuple.type.ToCanonical;
 /**
  *
  */
-public class BooleanCoerce extends Coercions.Coerce<Boolean>
+public abstract class NumberCoerce<Canonical> extends Coercions.Coerce<Canonical>
   {
-  protected BooleanCoerce( Map<Type, Coercions.Coerce> map )
+  public NumberCoerce( Map<Type, Coercions.Coerce> map )
     {
     super( map );
     }
 
   @Override
-  public Class<Boolean> getCanonicalType()
-    {
-    return boolean.class;
-    }
-
-  @Override
-  public <T> ToCanonical<T, Boolean> from( Type from )
+  public <T> ToCanonical<T, Canonical> from( Type from )
     {
     if( from == getCanonicalType() )
-      return f -> f != null && (Boolean) f;
+      return f -> f == null ? forNull() : (Canonical) f;
 
     if( from instanceof Class && Number.class.isAssignableFrom( (Class<?>) from ) )
-      return f -> f != null && ( (Boolean) f );
+      return f -> f == null ? forNull() : asType( (Number) f );
 
-    return f -> f != null && Boolean.parseBoolean( f.toString() );
+    return f -> f == null ? forNull() : parseType( f );
     }
 
   @Override
-  public Boolean coerce( Object value )
+  public Canonical coerce( Object value )
     {
-    if( value instanceof Boolean )
-      return (Boolean) value;
-    else if( value == null || value.toString().isEmpty())
-      return false;
+    if( value instanceof Number )
+      return asType( (Number) value );
+    else if( value == null || value.toString().isEmpty() )
+      return forNull();
     else
-      return Boolean.parseBoolean( value.toString() );
+      return parseType( value );
     }
+
+  protected abstract Canonical forNull();
+
+  protected abstract  <T> Canonical parseType( T f );
+
+  protected abstract  <T> Canonical asType( Number f );
   }
