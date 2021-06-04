@@ -83,10 +83,12 @@ public final class Coercions
 
       CoercibleType<T> coercibleType = Coercions.coercibleTypeFor( to );
 
-      if(coercibleType == null)
+      if( coercibleType == null )
         return ( t ) -> coerce( t, to );
 
-      return ( t ) -> (T) coercibleType.from( getCanonicalType() ).canonical( t );
+      ToCanonical<Object, T> from = coercibleType.from( getCanonicalType() );
+
+      return ( t ) -> (T) from.canonical( t );
       }
 
     @Override
@@ -159,6 +161,14 @@ public final class Coercions
    * @param type of type Class
    * @return a Class
    */
+  public static Class asNonPrimitiveOrNull( Type type )
+    {
+    if( type instanceof Class )
+      return asNonPrimitive( (Class) type );
+
+    return null;
+    }
+
   public static Class asNonPrimitive( Class type )
     {
     if( type.isPrimitive() )

@@ -23,7 +23,12 @@ package cascading.tuple.coerce;
 import java.lang.reflect.Type;
 import java.util.Map;
 
+import cascading.tuple.type.CoercibleType;
+import cascading.tuple.type.CoercionFrom;
 import cascading.tuple.type.ToCanonical;
+
+import static cascading.tuple.coerce.Coercions.asNonPrimitive;
+import static cascading.tuple.coerce.Coercions.asNonPrimitiveOrNull;
 
 /**
  *
@@ -38,11 +43,19 @@ public abstract class NumberCoerce<Canonical> extends Coercions.Coerce<Canonical
   @Override
   public <T> ToCanonical<T, Canonical> from( Type from )
     {
-    if( from == getCanonicalType() )
+    Class fromAsNonPrimitive = asNonPrimitiveOrNull( from );
+
+    if( fromAsNonPrimitive == asNonPrimitive( getCanonicalType() ) )
       return f -> f == null ? forNull() : (Canonical) f;
 
-    if( from instanceof Class && Number.class.isAssignableFrom( (Class<?>) from ) )
+    if( fromAsNonPrimitive != null && Number.class.isAssignableFrom( fromAsNonPrimitive ) )
       return f -> f == null ? forNull() : asType( (Number) f );
+
+    if( from instanceof CoercibleType )
+      {
+      CoercionFrom<T, Object> to = ( (CoercibleType<T>) from ).to( getCanonicalType() );
+      return f -> (Canonical) to.coerce( f );
+      }
 
     return f -> f == null ? forNull() : parseType( f );
     }
@@ -60,7 +73,7 @@ public abstract class NumberCoerce<Canonical> extends Coercions.Coerce<Canonical
 
   protected abstract Canonical forNull();
 
-  protected abstract  <T> Canonical parseType( T f );
+  protected abstract <T> Canonical parseType( T f );
 
-  protected abstract  <T> Canonical asType( Number f );
+  protected abstract <T> Canonical asType( Number f );
   }

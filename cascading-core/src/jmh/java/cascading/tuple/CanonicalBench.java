@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import cascading.tuple.coerce.Coercions;
 import cascading.tuple.type.CoercibleType;
+import cascading.tuple.type.ToCanonical;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -51,9 +52,18 @@ public class CanonicalBench
 
   Object[][] values = new Object[][]{
     {null, null, null, null, null},
+    {"1000.000", "1000", "1000", "1000.000", "1000.000"},
     {1000.000f, "1000", "1000", "1000.000", "1000.000"},
     {"1000.000", 1000, 1000, 1000.000D, 1000.000D},
     {10000, 1000D, 1000D, 1000.000F, 1000.000F}
+  };
+
+  Type[][] valueTypes = new Type[][]{
+    {String.class, Integer.class, Integer.TYPE, Double.class, Double.TYPE},
+    {String.class, String.class, String.class, String.class, String.class},
+    {Float.TYPE, String.class, String.class, String.class, String.class},
+    {String.class, Integer.TYPE, Integer.class, Double.TYPE, Double.class},
+    {Integer.class, Double.TYPE, Double.class, Float.TYPE, Float.class}
   };
 
   @BenchmarkMode({Mode.Throughput})
@@ -64,9 +74,45 @@ public class CanonicalBench
     for( Object[] list : values )
       {
       for( int i = 0; i < coercibleTypes.length; i++ )
-        {
         bh.consume( coercibleTypes[ i ].canonical( list[ i ] ) );
-        }
+      }
+    }
+
+  @BenchmarkMode({Mode.Throughput})
+  @OutputTimeUnit(TimeUnit.MICROSECONDS)
+  @Benchmark
+  public void toCanonical( Blackhole bh )
+    {
+    for( int i = 0; i < values.length; i++ )
+      {
+      Object[] list = values[ i ];
+      Type[] typeList = valueTypes[ i ];
+      for( int j = 0; j < coercibleTypes.length; j++ )
+        bh.consume( coercibleTypes[ j ].from( typeList[j] ).canonical( list[ j ] ) );
+      }
+    }
+
+  ToCanonical[][] canonicals;
+  {
+  canonicals = new ToCanonical[values.length][coercibleTypes.length];
+  for( int i = 0; i < values.length; i++ )
+    {
+    Type[] typeList = valueTypes[ i ];
+    for( int j = 0; j < coercibleTypes.length; j++ )
+      canonicals[i][j] = coercibleTypes[ j ].from( typeList[j] );
+    }
+  }
+
+  @BenchmarkMode({Mode.Throughput})
+  @OutputTimeUnit(TimeUnit.MICROSECONDS)
+  @Benchmark
+  public void toCanonicalFixed( Blackhole bh )
+    {
+    for( int i = 0; i < values.length; i++ )
+      {
+      Object[] list = values[ i ];
+      for( int j = 0; j < coercibleTypes.length; j++ )
+        bh.consume( canonicals[i][j].canonical( list[ j ] ) );
       }
     }
   }
