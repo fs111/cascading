@@ -46,18 +46,46 @@ public abstract class NumberCoerce<Canonical> extends Coercions.Coerce<Canonical
     Class fromAsNonPrimitive = asNonPrimitiveOrNull( from );
 
     if( fromAsNonPrimitive == asNonPrimitive( getCanonicalType() ) )
-      return f -> f == null ? forNull() : (Canonical) f;
+      return new ToCanonical<T, Canonical>()
+        {
+        @Override
+        public Canonical canonical( T f )
+          {
+          return f == null ? NumberCoerce.this.forNull() : (Canonical) f;
+          }
+        };
 
     if( fromAsNonPrimitive != null && Number.class.isAssignableFrom( fromAsNonPrimitive ) )
-      return f -> f == null ? forNull() : asType( (Number) f );
+      return new ToCanonical<T, Canonical>()
+        {
+        @Override
+        public Canonical canonical( T f )
+          {
+          return f == null ? NumberCoerce.this.forNull() : NumberCoerce.this.asType( (Number) f );
+          }
+        };
 
     if( from instanceof CoercibleType )
       {
       CoercionFrom<T, Object> to = ( (CoercibleType<T>) from ).to( getCanonicalType() );
-      return f -> (Canonical) to.coerce( f );
+      return new ToCanonical<T, Canonical>()
+        {
+        @Override
+        public Canonical canonical( T f )
+          {
+          return (Canonical) to.coerce( f );
+          }
+        };
       }
 
-    return f -> f == null ? forNull() : parseType( f );
+    return new ToCanonical<T, Canonical>()
+      {
+      @Override
+      public Canonical canonical( T f )
+        {
+        return f == null ? NumberCoerce.this.forNull() : NumberCoerce.this.parseType( f );
+        }
+      };
     }
 
   @Override
