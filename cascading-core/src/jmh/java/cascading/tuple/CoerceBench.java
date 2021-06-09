@@ -25,46 +25,129 @@ import java.util.concurrent.TimeUnit;
 
 import cascading.tuple.coerce.Coercions;
 import cascading.tuple.type.CoercibleType;
+import cascading.tuple.type.CoercionFrom;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 
 /**
  *
  */
-@State(Scope.Benchmark)
+@State(Scope.Thread)
 public class CoerceBench
   {
+  public enum Canonical
+    {
+      String,
+      Short,
+      Short_TYPE,
+      Integer,
+      Integer_TYPE,
+      Long,
+      Long_TYPE,
+      Float,
+      Float_TYPE,
+      Double,
+      Double_TYPE
+    }
+
+  @Param({
+    "String",
+    "Short",
+    "Short_TYPE",
+    "Integer",
+    "Integer_TYPE",
+    "Long",
+    "Long_TYPE",
+    "Float",
+    "Float_TYPE",
+    "Double",
+    "Double_TYPE"
+  })
+
+  CanonicalBench.Canonical to = CanonicalBench.Canonical.String;
+
   Type[] canonicalTypes = new Type[]{
     String.class,
+    Short.class,
+    Short.TYPE,
     Integer.class,
     Integer.TYPE,
+    Long.class,
+    Long.TYPE,
+    Float.class,
+    Float.TYPE,
     Double.class,
     Double.TYPE
   };
 
-  CoercibleType[] coercibleTypes = Coercions.coercibleArray( canonicalTypes.length, canonicalTypes );
+  Object[] canonicalValues = new Object[]{
+    "1000",
+    1000,
+    1000,
+    1000,
+    1000,
+    1000L,
+    1000L,
+    1000.000F,
+    1000.000F,
+    1000.000D,
+    1000.000D
+  };
 
-  Object[][] values = new Object[][]{
-    {null, null, 0, null, 0D},
-    {"1000.000", 1000, 1000, 1000.000D, 1000.000D},
-    };
+  Class[] toTypes = new Class[]{
+    String.class,
+    Integer.class,
+    Long.class,
+    Float.class,
+    Double.class
+  };
+
+  CoercibleType coercibleType;
+  Object canonicalValue;
+  CoercionFrom[] coercions;
+
+  @Setup
+  public void setup()
+    {
+    coercibleType = Coercions.coercibleTypeFor( canonicalTypes[ to.ordinal() ] );
+    canonicalValue = canonicalValues[to.ordinal()];
+    coercions = new CoercionFrom[ toTypes.length ];
+
+    for( int i = 0; i < toTypes.length; i++ )
+      coercions[ i ] = coercibleType.to( toTypes[ i ] );
+    }
 
   @BenchmarkMode({Mode.Throughput})
   @OutputTimeUnit(TimeUnit.MICROSECONDS)
   @Benchmark
   public void baseline( Blackhole bh )
     {
-    for( Object[] list : values )
-      {
-      for( int i = 0; i < coercibleTypes.length; i++ )
-        {
-        bh.consume( coercibleTypes[ i ].coerce( list[ i ], canonicalTypes[ i ] ) );
-        }
-      }
+    for( int i = 0; i < toTypes.length; i++ )
+      bh.consume( coercibleType.coerce( canonicalValue, toTypes[ i ] ) );
+    }
+
+  @BenchmarkMode({Mode.Throughput})
+  @OutputTimeUnit(TimeUnit.MICROSECONDS)
+  @Benchmark
+  public void coercionFrom( Blackhole bh )
+    {
+    for( int i = 0; i < toTypes.length; i++ )
+      bh.consume( coercibleType.to( toTypes[ i ] ).coerce( canonicalValue ) );
+    }
+
+  @BenchmarkMode({Mode.Throughput})
+  @OutputTimeUnit(TimeUnit.MICROSECONDS)
+  @Benchmark
+  public void coercionFromFixed( Blackhole bh )
+    {
+    for( int i = 0; i < toTypes.length; i++ )
+      bh.consume( coercions[ i ].coerce( canonicalValue ) );
     }
   }
