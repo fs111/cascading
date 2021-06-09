@@ -251,6 +251,7 @@ subprojects {
 
   tasks.jmh.finalizedBy tasks.jmhReport
   tasks.jmh.enabled = false
+  tasks.jmhReport.enabled = false
 }
 
 task allJavadoc( type: Javadoc, dependsOn: subprojects.javadoc ) {

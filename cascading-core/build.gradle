@@ -56,4 +56,5 @@ jmh {
   excludes = ['.*DelimitedParserBench.*']
 }
 
-tasks.jmh.enabled = true;
+tasks.jmh.enabled = true
+tasks.jmhReport.enabled = true
