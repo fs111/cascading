@@ -60,12 +60,6 @@ javadoc {
 jmh {
   jmhVersion = '1.32'
   excludes = ['.*DelimitedParserBench.*']
-  warmupIterations = 1
-  warmup = '3s'
-  iterations = 5
-  fork = 1
-  threads = 1
-  timeOnIteration = '5s'
   duplicateClassesStrategy = DuplicatesStrategy.WARN
   resultFormat = 'JSON'
   humanOutputFile = project.file( "${project.buildDir}/reports/jmh/human.txt" )

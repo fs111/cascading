@@ -28,18 +28,24 @@ import cascading.tuple.type.CoercibleType;
 import cascading.tuple.type.ToCanonical;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OperationsPerInvocation;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
 /**
  *
  */
 @State(Scope.Thread)
+@OperationsPerInvocation(12)
+@Warmup(iterations = 1, time = 2)
+@Measurement(iterations = 3, time = 1)
 public class CanonicalBench
   {
   public enum Canonical
@@ -91,18 +97,30 @@ public class CanonicalBench
     null,
     "1000",
     1000,
+    1000,
+    1000,
+    1000,
+    1000L,
     1000L,
     1000.000F,
+    1000.000F,
+    1000.000D,
     1000.000D
   };
 
   Class[] fromTypes = new Class[]{
     String.class,
     String.class,
+    Short.class,
+    Short.TYPE,
     Integer.class,
+    Integer.TYPE,
     Long.class,
+    Long.TYPE,
     Float.class,
-    Double.class
+    Float.TYPE,
+    Double.class,
+    Double.TYPE
   };
 
   CoercibleType coercibleType;
