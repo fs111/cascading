@@ -55,3 +55,5 @@ javadoc {
 jmh {
   excludes = ['.*DelimitedParserBench.*']
 }
+
+tasks.jmh.enabled = true;
